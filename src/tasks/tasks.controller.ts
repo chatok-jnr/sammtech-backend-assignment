@@ -12,7 +12,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
-
+import { MoveTaskDto } from './dto/move-task.dto';
 @UseGuards(JwtAuthGuard)
 @Controller()
 export class TasksController {
@@ -42,5 +42,14 @@ export class TasksController {
     @Param('id') id: string,
   ) {
     return this.tasksService.remove(user.userId, id);
+  }
+
+  @Patch('tasks/:id/position')
+  move(
+    @CurrentUser() user: { userId: string },
+    @Param('id') id: string,
+    @Body() dto: MoveTaskDto
+  ) {
+    return this.tasksService.move(user.userId, id, dto);
   }
 }

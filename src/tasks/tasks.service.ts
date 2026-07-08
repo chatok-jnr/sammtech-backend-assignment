@@ -3,9 +3,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateTaskDto } from './dto/create-task.dto';
-import { UpdateTaskDto } from './dto/update-task.dto';
+
+import { PrismaService }  from '../prisma/prisma.service';
+import { CreateTaskDto }  from './dto/create-task.dto';
+import { UpdateTaskDto }  from './dto/update-task.dto';
+import { MoveTaskDto }    from './dto/move-task.dto';
 
 @Injectable()
 export class TasksService {
@@ -75,6 +77,92 @@ export class TasksService {
     return { message: 'Task deleted successfully' };
   }
 
+  async move(userId: string, taskId: string, dto: MoveTaskDto) {
+    const task = await this.findTaskWithBoard(taskId);
+    this.assertOwnership(task.column.board.ownerId, userId);
+
+    const sourceColumnId = task.columnId;
+    const sourcePosition = task.position;
+    const destColumnId = dto.columnId ?? sourceColumnId;
+
+    // if moving to a different column, verify it belongs to the same board
+    if(destColumnId !== sourceColumnId) {
+      const destColumn = await this.prisma.column.findUnique({
+        where: {id: destColumnId},
+      });
+
+      if(!destColumn) {
+        throw new NotFoundException('Destination column not found');
+      }
+
+      if(destColumn.boardId !== task.column.boardId) {
+        throw new ForbiddenException('Cannot move task to a column in a different board');
+      }
+    }
+
+    // clamp target position to a valid range
+    const destCount = await this.prisma.task.count({
+      where: {columnId: destColumnId, deletedAt: null, NOT: {id: taskId}},
+    });
+    const destPosition = Math.max(0, Math.min(dto.position, destCount));
+
+    if(sourceColumnId === destColumnId && destPosition === sourcePosition) {
+      return task;
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      if(sourceColumnId === destColumnId) {
+        if(destPosition < sourcePosition) {
+          await tx.task.updateMany({
+            where: {
+              columnId: sourceColumnId,
+              deletedAt: null,
+              position: {gte: destPosition, lt: sourcePosition},
+            },
+            data: {position: {increment: 1}},
+          });
+        } else {
+          await tx.task.updateMany({
+            where: {
+              columnId: sourceColumnId,
+              deletedAt: null,
+              position: {gt: sourcePosition, lte: destPosition},
+            },
+            data: {position: {decrement: 1}},
+          });
+        }
+
+        await tx.task.update({
+          where: {id: taskId},
+          data: {position: destPosition},
+        });
+      } else {
+        await tx.task.updateMany({
+          where: {
+            columnId: sourceColumnId,
+            deletedAt: null,
+            position: {gt: sourcePosition},
+          },
+          data: {
+            position: {decrement: 1},
+          }
+        });
+
+        await tx.task.updateMany({
+          where: {id: taskId},
+          data: {
+            columnId: destColumnId,
+            position: destPosition,
+          }
+        })
+      }
+    })
+
+    return this.prisma.task.findUnique({
+      where: {id: taskId},
+      include: {labels: true},
+    });
+  }
 
   
     /*==============================
