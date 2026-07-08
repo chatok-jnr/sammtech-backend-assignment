@@ -1,13 +1,41 @@
-import {Body, Controller, Post} from '@nestjs/common';
-import {AuthService} from "./auth.service";
-import {RegisterDto} from "./dto/register.dto";
+import { Body, Controller, Post, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { AuthService } from './auth.service';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
+import { RefreshDto } from './dto/refresh.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('auth')
 export class AuthController {
-    constructor(private authService: AuthService) {}
-    
-    @Post('register')
-    register (@Body() dto: RegisterDto) {
-        return this.authService.register(dto);
+  constructor(
+    private authService: AuthService,
+    private jwtService: JwtService,
+    private config: ConfigService,
+  ) {}
+
+  @Post('register')
+  register(@Body() dto: RegisterDto) {
+    return this.authService.register(dto);
+  }
+
+  @Post('login')
+  login(@Body() dto: LoginDto) {
+    return this.authService.login(dto);
+  }
+
+  @Post('refresh')
+  async refreshToken(@Body() dto: RefreshDto) {
+    // decode (without full verification bypass) to extract sub/userId first
+    let payload: { sub: string };
+    try {
+      payload = await this.jwtService.verifyAsync(dto.refreshToken, {
+        secret: this.config.get<string>('JWT_REFRESH_SECRET'),
+      });
+    } catch {
+      throw new UnauthorizedException('Invalid or expired refresh token');
     }
+
+    return this.authService.refresh(payload.sub, dto.refreshToken);
+  }
 }
