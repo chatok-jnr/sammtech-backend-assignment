@@ -40,6 +40,7 @@ export class BoardService{
                     orderBy: { order: 'asc' },
                     include: {
                         tasks: {
+                            where: {deletedAt: null},
                             orderBy: { position: 'asc' },
                             include: { labels: true },
                         },
