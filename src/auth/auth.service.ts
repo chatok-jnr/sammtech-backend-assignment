@@ -65,9 +65,9 @@ export class AuthService {
   }
 
 
-  // ===============================
-  //        HELPER FUNCTIONS
-  // ===============================
+    /*===============================
+            HELPER FUNCTIONS
+    ===============================*/
 
   private async generateTokens(userId: string, email: string) {
     const payload = { sub: userId, email };
