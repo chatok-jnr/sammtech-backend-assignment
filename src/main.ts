@@ -4,8 +4,21 @@ import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
+import helmet from 'helmet';
+const compression = require('compression');
+
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {bodyParser: false});
+
+  app.use(require('body-parser').json({limit: '1mb'}));
+  app.use(helmet());
+  app.use(compression());
+
+  app.enableCors({
+    origin: process.env.CORS_ORIGIN?.split(',') ?? '*',
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    credential: true,
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
