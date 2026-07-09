@@ -15,7 +15,7 @@ A RESTful backend for a Kanban-style task management system, built for the SammT
 
 ### 1. Clone and install
 ```bash
-git clone <YOUR_REPO_URL>
+git clone https://github.com/chatok-jnr/sammtech-backend-assignment.git
 cd sammtech-backend-assignment
 npm install
 ```
@@ -77,8 +77,8 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ## API Documentation
 
-- **Swagger UI:** `http://localhost:3000/api/docs` (or `<LIVE_API_URL>/api/docs` once deployed)
-- **Postman collection:** `<https://bitenow-4006.postman.co/workspace/BiteNow-Workspace~09fe6fcb-5f39-4357-8af9-d08686d48f20/collection/46761222-6e7290e5-68f8-4abc-b1c3-c4a87538908a?action=share&source=copy-link&creator=46761222>`
+- **Swagger UI:** `http://localhost:3000/api/docs` or `https://sammtech.onrender.com/api/docs`
+- **Postman collection:** `https://bitenow-4006.postman.co/workspace/BiteNow-Workspace~09fe6fcb-5f39-4357-8af9-d08686d48f20/collection/46761222-6e7290e5-68f8-4abc-b1c3-c4a87538908a?action=share&source=copy-link&creator=46761222`
 
 All protected routes require a Bearer token. In Swagger, click **Authorize** and paste your access token (obtained from `POST /auth/login`) to test protected endpoints directly from the docs UI.
 
@@ -115,15 +115,16 @@ All protected routes require a Bearer token. In Swagger, click **Authorize** and
 - **Refresh token cleanup job.** Expired/revoked refresh token rows currently accumulate indefinitely. A scheduled job to purge old rows would keep the table from growing unbounded.
 - **File upload for task attachments** (Multer + Cloudinary) — listed as a bonus differentiator, not implemented due to time constraints.
 - **More granular RBAC** beyond "board owner can do everything" — e.g. shared boards with collaborator roles (viewer/editor) rather than single-owner-only access.
-- **Automated test suite** (unit tests for services, e2e tests for controllers) — manual endpoint testing was used throughout development given the timeline; a real test suite would be the next priority for a longer-lived project.
+- **Google OAuth authentication.** Migrate the current email/password authentication to Google OAuth so users can sign in with their real Google accounts instead of using manually created credentials, improving both the user experience and authentication security.
+- **Automated test suite** (unit tests for services, e2e tests for controllers) — manual endpoint testing was used throughout development given the timeline; a comprehensive test suite would be the next priority for a longer-lived project.
 
 ---
 
 ## Deployment
 
-- **Live API base URL:** `<FILL_IN_AFTER_DEPLOYING>`
-- **Platform:** `<Railway / Render / Fly.io>`
-- **Swagger docs (deployed):** `<LIVE_URL>/api/docs`
+- **Live API base URL:** `https://sammtech.onrender.com`
+- **Platform:** `Render`
+- **Swagger docs (deployed):** `https://sammtech.onrender.com/api/docs`
 
 ---
 
