@@ -6,6 +6,10 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { ConfigService } from '@nestjs/config';
 
+import {ApiTags} from "@nestjs/swagger";
+
+
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(

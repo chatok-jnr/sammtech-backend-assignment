@@ -13,6 +13,10 @@ import { ColumnsService } from './columns.service';
 import { CreateColumnDto } from './dto/create-column.dto';
 import { UpdateColumnDto } from './dto/update-column.dto';
 
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+
+@ApiTags('Columns')
+@ApiBearerAuth('access-token')
 @UseGuards(JwtAuthGuard)
 @Controller()
 export class ColumnsController {

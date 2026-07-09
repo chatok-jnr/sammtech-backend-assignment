@@ -10,7 +10,9 @@ import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { CreateBoardDto } from "./dto/create-board.dto";
 import { BoardService } from "./board.service";
 import {CurrentUser} from "../common/decorators/current-user.decorator";
-
+import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+@ApiTags('Boards')
+@ApiBearerAuth('access-token')
 @UseGuards(JwtAuthGuard) // Authentication guard to protect all routes in this controller
 @Controller('boards')
 export class BoardController{
