@@ -19,6 +19,7 @@ model User {
   assignedTasks Task[]         @relation("TaskAssignee")
 
   @@map("users")
+  taskActivities TaskActivity[]
 }
 
 model RefreshToken {
@@ -83,6 +84,8 @@ model Task {
   @@index([priority])
   @@index([dueDate])
   @@map("tasks")
+
+  activities TaskActivity[]
 }
 
 model TaskLabel {
@@ -102,4 +105,19 @@ enum Priority {
   MEDIUM
   HIGH
   URGENT
+}
+
+model TaskActivity {
+  id        String   @id @default(uuid())
+  taskId    String
+  userId    String
+  action    String   // e.g. "created", "updated", "moved", "deleted"
+  details   Json?    // flexible: { from: "Todo", to: "Done" } etc.
+  createdAt DateTime @default(now())
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@map("task_activities")
 }

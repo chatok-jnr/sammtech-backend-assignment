@@ -5,14 +5,17 @@ import {
 } from '@nestjs/common';
 
 import { PrismaService }  from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 import { CreateTaskDto }  from './dto/create-task.dto';
 import { UpdateTaskDto }  from './dto/update-task.dto';
 import { MoveTaskDto }    from './dto/move-task.dto';
 import { FilterTaskDto }  from './dto/filter-task.dto';
 
+
 // Exceptions
 import { ResourceNotFoundException } from 'src/common/exceptions/resource-not-found.exception';
 import { NotResourceOwnerException } from 'src/common/exceptions/ownership.exception';
+
 
 @Injectable()
 export class TasksService {
@@ -27,7 +30,7 @@ export class TasksService {
     });
     const position = lastTask ? lastTask.position + 1 : 0;
 
-    return this.prisma.task.create({
+    const task = await this.prisma.task.create({
       data: {
         title: dto.title,
         description: dto.description,
@@ -42,6 +45,10 @@ export class TasksService {
       },
       include: { labels: true },
     });
+
+    await this.logActivity(task.id, userId, 'created', {title: task.title});
+
+    return task;
   }
 
   async update(userId: string, taskId: string, dto: UpdateTaskDto) {
@@ -53,7 +60,7 @@ export class TasksService {
       await this.prisma.taskLabel.deleteMany({ where: { taskId } });
     }
 
-    return this.prisma.task.update({
+    const updTask = await this.prisma.task.update({
       where: { id: taskId },
       data: {
         ...(dto.title !== undefined && { title: dto.title }),
@@ -67,6 +74,10 @@ export class TasksService {
       },
       include: { labels: true },
     });
+
+    await this.logActivity(taskId, userId, 'updated', {updatedFields: Object.keys(dto)}); 
+
+    return updTask;
   }
 
   async remove(userId: string, taskId: string) {
@@ -78,6 +89,8 @@ export class TasksService {
       where: { id: taskId },
       data: { deletedAt: new Date() },
     });
+
+    await this.logActivity(taskId, userId, 'deleted', {title: task.title});
 
     return { message: 'Task deleted successfully' };
   }
@@ -163,6 +176,13 @@ export class TasksService {
       }
     })
 
+    await this.logActivity(taskId, userId, 'moved', {
+      fromColumnId: sourceColumnId,
+      toColumnId: destColumnId,
+      fromPosition: sourcePosition,
+      toPosition: destPosition,
+    });
+
     return this.prisma.task.findUnique({
       where: {id: taskId},
       include: {labels: true},
@@ -216,6 +236,39 @@ export class TasksService {
     });
   }
   
+  async getActivity(userId: string, taskId: string) {
+    const task = await this.prisma.task.findUnique({
+      where: {id: taskId},
+      include: {column: {
+        include: {
+          board: true
+        }
+      }}
+    })
+
+    if(!task) {
+      throw new ResourceNotFoundException('Task', taskId);
+    }
+
+    this.assertOwnership(task.column.board.ownerId, userId);
+    
+    return this.prisma.taskActivity.findMany({
+      where: {taskId},
+      include:{
+        user: {
+          select:{
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+  }
+
     /*==============================
             HELPER FUNCTIONS
     ==============================*/
@@ -251,5 +304,16 @@ export class TasksService {
     if (ownerId !== userId) {
       throw new ForbiddenException('You do not have access to this resource');
     }
+  }
+
+  private async logActivity(
+    taskId: string,
+    userId: string,
+    action: string,
+    details?: Prisma.InputJsonValue
+  ) {
+    await this.prisma.taskActivity.create({
+      data: { taskId, userId, action, details },
+    });
   }
 }

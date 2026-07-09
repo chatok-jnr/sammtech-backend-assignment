@@ -69,4 +69,12 @@ export class TasksController {
   ) {
     return this.tasksService.findAllForBoard(user.userId, boardId, filters);
   }
+
+  @Get('tasks/:id/activity')
+  getActivivy(
+    @CurrentUser() user: {userId: string},
+    @Param("id") taskId: string
+  ) {
+    return this.tasksService.getActivity(user.userId, taskId);
+  }
 }
