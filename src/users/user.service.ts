@@ -1,6 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 
+// Exceptions
+import { ResourceNotFoundException } from 'src/common/exceptions/resource-not-found.exception';
+
 @Injectable()
 export class UserService{
     constructor(
@@ -18,9 +21,7 @@ export class UserService{
             }
         });
 
-        if(!user) {
-            throw new NotFoundException('User not found');
-        }
+        if(!user) throw new ResourceNotFoundException('User', userId);
 
         return user;
     }

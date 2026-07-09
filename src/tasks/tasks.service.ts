@@ -9,6 +9,11 @@ import { CreateTaskDto }  from './dto/create-task.dto';
 import { UpdateTaskDto }  from './dto/update-task.dto';
 import { MoveTaskDto }    from './dto/move-task.dto';
 import { FilterTaskDto }  from './dto/filter-task.dto';
+
+// Exceptions
+import { ResourceNotFoundException } from 'src/common/exceptions/resource-not-found.exception';
+import { NotResourceOwnerException } from 'src/common/exceptions/ownership.exception';
+
 @Injectable()
 export class TasksService {
   constructor(private prisma: PrismaService) {}
@@ -92,7 +97,7 @@ export class TasksService {
       });
 
       if(!destColumn) {
-        throw new NotFoundException('Destination column not found');
+        throw new ResourceNotFoundException('Column', destColumnId);
       }
 
       if(destColumn.boardId !== task.column.boardId) {
@@ -171,7 +176,7 @@ export class TasksService {
     });
 
     if(!board || board.deletedAt) {
-      throw new NotFoundException('Board not found');
+      throw new ResourceNotFoundException('Board', boardId);
     }
     this.assertOwnership(board.ownerId, userId);
 
@@ -222,7 +227,7 @@ export class TasksService {
     });
 
     if (!task || task.deletedAt) {
-      throw new NotFoundException('Task not found');
+      throw new ResourceNotFoundException('Task', taskId);
     }
 
     return task;
@@ -235,7 +240,7 @@ export class TasksService {
     });
 
     if (!column) {
-      throw new NotFoundException('Column not found');
+      throw new ResourceNotFoundException('Column', columnId);
     }
 
     this.assertOwnership(column.board.ownerId, userId);

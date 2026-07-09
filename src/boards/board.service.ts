@@ -1,7 +1,8 @@
 import { Injectable, ForbiddenException, NotFoundException} from "@nestjs/common";
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateBoardDto } from "./dto/create-board.dto";
-
+import { ResourceNotFoundException } from "src/common/exceptions/resource-not-found.exception";
+import { NotResourceOwnerException } from "src/common/exceptions/ownership.exception";
 @Injectable()
 export class BoardService{
     constructor(
@@ -51,11 +52,11 @@ export class BoardService{
         });
 
         if(!board || board.deletedAt) {
-            throw new NotFoundException('Board not found');
+            throw new ResourceNotFoundException('Board', boardId);
         }
 
         if(board.ownerId !== userId) {
-            throw new ForbiddenException('You do not have access to this board');
+            throw new NotResourceOwnerException('board');
         }
 
         return board;
@@ -71,11 +72,11 @@ export class BoardService{
         });
 
         if(!board) {
-            throw new NotFoundException('Board not found');
+            throw new ResourceNotFoundException('Board', boardId);
         }
 
         if(board.ownerId !== userId) {
-            throw new ForbiddenException('You do not have access to this board');
+            throw new ResourceNotFoundException('Board');
         }
 
         await this.prisma.board.update({

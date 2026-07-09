@@ -3,6 +3,10 @@ import { PrismaService } from '../prisma/prisma.service';
 import { UpdateColumnDto } from './dto/update-column.dto';
 import { CreateColumnDto } from './dto/create-column.dto';
 
+// Exceptions
+import { ResourceNotFoundException } from 'src/common/exceptions/resource-not-found.exception';
+import { NotResourceOwnerException } from 'src/common/exceptions/ownership.exception';
+
 @Injectable()
 export class ColumnsService{
     constructor(
@@ -72,7 +76,7 @@ export class ColumnsService{
         }); 
 
         if(!column) {
-            throw new NotFoundException('Column not found');
+            throw new ResourceNotFoundException('Column', columnId);
         }
         
         return column;
@@ -86,7 +90,7 @@ export class ColumnsService{
         });
 
         if(!board || board.deletedAt) {
-            throw new NotFoundException('Board not found');
+            throw new ResourceNotFoundException('Board', boardId);
         }
 
         this.assertOwnerShip(userId, board.ownerId);
@@ -96,7 +100,7 @@ export class ColumnsService{
 
     private assertOwnerShip(userId: string, ownerId: string) {
         if(ownerId !== userId) {
-            throw new ForbiddenException('You do not have permission to perform this action');
+            throw new NotResourceOwnerException('board');
         }
     }
 
