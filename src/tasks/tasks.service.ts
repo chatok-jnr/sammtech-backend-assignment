@@ -8,7 +8,7 @@ import { PrismaService }  from '../prisma/prisma.service';
 import { CreateTaskDto }  from './dto/create-task.dto';
 import { UpdateTaskDto }  from './dto/update-task.dto';
 import { MoveTaskDto }    from './dto/move-task.dto';
-
+import { FilterTaskDto }  from './dto/filter-task.dto';
 @Injectable()
 export class TasksService {
   constructor(private prisma: PrismaService) {}
@@ -164,6 +164,52 @@ export class TasksService {
     });
   }
 
+
+  async findAllForBoard(userId: string, boardId: string, filters: FilterTaskDto) {
+    const board = await this.prisma.board.findUnique({
+      where: {id: boardId}
+    });
+
+    if(!board || board.deletedAt) {
+      throw new NotFoundException('Board not found');
+    }
+    this.assertOwnership(board.ownerId, userId);
+
+    const where: any = {
+      deletedAt: null,
+      column: {boardId}
+    }
+
+    if(filters.title) {
+      where.title = filters.title;
+    }
+
+    if(filters.priority) {
+      where.priority = filters.priority;
+    }
+
+    if(filters.dueBefore || filters.dueAfter) {
+      where.dueDate = {};
+      if(filters.dueBefore) where.dueDate.lte = new Date(filters.dueBefore);
+      if(filters.dueAfter) where.dueDate.gte = new Date(filters.dueAfter);
+    }
+
+    return this.prisma.task.findMany({
+      where,
+      include: {
+        labels: true, 
+        column: {
+          select: {
+            id: true,
+            title: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+  }
   
     /*==============================
             HELPER FUNCTIONS

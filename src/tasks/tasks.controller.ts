@@ -1,11 +1,13 @@
 import {
   Body,
   Controller,
+  Get,
   Delete,
   Param,
   Patch,
   Post,
   UseGuards,
+  Query
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -13,6 +15,7 @@ import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { MoveTaskDto } from './dto/move-task.dto';
+import { FilterTaskDto } from './dto/filter-task.dto';
 @UseGuards(JwtAuthGuard)
 @Controller()
 export class TasksController {
@@ -51,5 +54,14 @@ export class TasksController {
     @Body() dto: MoveTaskDto
   ) {
     return this.tasksService.move(user.userId, id, dto);
+  }
+
+  @Get('boards/:boardId/tasks')
+  findAllForBoard(
+    @CurrentUser() user: {userId: string},
+    @Param('boardId') boardId: string,
+    @Query() filters: FilterTaskDto,
+  ) {
+    return this.tasksService.findAllForBoard(user.userId, boardId, filters);
   }
 }
