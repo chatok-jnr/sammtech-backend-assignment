@@ -80,10 +80,12 @@ export class ColumnsService{
 
     private async verifyBoardOwnerShip(userId: string, boardId: string) {
         const board = await this.PrismaService.board.findUnique({
-            where: {id: boardId},
+            where: {
+                id: boardId
+            },
         });
 
-        if(!board) {
+        if(!board || board.deletedAt) {
             throw new NotFoundException('Board not found');
         }
 

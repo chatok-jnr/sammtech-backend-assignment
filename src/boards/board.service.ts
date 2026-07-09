@@ -22,7 +22,8 @@ export class BoardService{
     async findAllForUser(userId: string) {
         const boards = await this.prisma.board.findMany({
             where: {
-                ownerId: userId
+                ownerId: userId,
+                deletedAt: null
             },
             orderBy:{
                 createdAt: 'desc'
@@ -49,7 +50,7 @@ export class BoardService{
             },
         });
 
-        if(!board) {
+        if(!board || board.deletedAt) {
             throw new NotFoundException('Board not found');
         }
 
@@ -77,9 +78,12 @@ export class BoardService{
             throw new ForbiddenException('You do not have access to this board');
         }
 
-        await this.prisma.board.delete({
+        await this.prisma.board.update({
             where: {
                 id: boardId
+            },
+            data: {
+                deletedAt: new Date()
             }
         });
         
