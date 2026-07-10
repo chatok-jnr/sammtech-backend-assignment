@@ -168,12 +168,27 @@ All protected routes require a Bearer token. In Swagger, click **Authorize** and
 
 ---
 
-## Deployment
+## Production Deployment
 
-- **Live API base URL:** `https://sammtech.onrender.com`
-- **Platform:** `Render`
-- **Swagger docs (deployed):** `https://sammtech.onrender.com/api/docs`
+The API is deployed and publicly accessible.
 
+| Service | URL |
+|---------|-----|
+| **Live API** | https://sammtech.onrender.com |
+| **Swagger Documentation** | https://sammtech.onrender.com/api/docs |
+| **Hosting Platform** | Render |
+| **Database** | Neon PostgreSQL |
+| **ORM** | Prisma |
+
+### Deployment Stack
+
+- **Backend:** NestJS
+- **Hosting:** Render
+- **Database:** Neon PostgreSQL
+- **ORM:** Prisma
+- **Authentication:** JWT (Access + Refresh Tokens)
+
+The Render service is connected to the GitHub repository and automatically redeploys whenever changes are pushed to the `main` branch.
 ---
 
 ## Project Structure
