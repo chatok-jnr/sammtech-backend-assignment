@@ -6,6 +6,54 @@ A RESTful backend for a Kanban-style task management system, built for the SammT
 
 ---
 
+
+## Features
+
+- 🔐 JWT Authentication (Access & Refresh Tokens)
+- 🔄 Refresh Token Rotation with Secure SHA-256 Storage
+- 👤 User Registration & Login
+- 📋 Kanban Boards, Columns & Tasks
+- 🔀 Atomic Task Reordering & Cross-Column Moves
+- 📝 Task Activity Logging
+- 🔍 Task Search & Filtering (Title, Priority, Due Date)
+- 🛡️ Role-Based Access Control (Board Owner Authorization)
+- 🗑️ Soft Deletes for Boards & Tasks
+- 🚦 Rate Limiting on Authentication Endpoints
+- 🧾 Request Validation with `class-validator`
+- ⚠️ Global Exception Handling
+- 📚 Swagger / OpenAPI Documentation
+- 🐘 PostgreSQL + Prisma ORM
+- 🚀 Production Deployment on Render with Neon PostgreSQL
+
+
+---
+
+## Architecture
+
+```mermaid
+graph TD
+
+Client[Client / Frontend]
+
+Client --> Auth
+Client --> Boards
+Client --> Columns
+Client --> Tasks
+
+Auth --> JWT[JWT Authentication]
+JWT --> Guards[JWT Guards]
+
+Boards --> Prisma
+Columns --> Prisma
+Tasks --> Prisma
+Auth --> Prisma
+
+Prisma --> PostgreSQL[(Neon PostgreSQL)]
+
+Tasks --> Activity[Task Activity Log]
+Tasks --> Labels[Task Labels]
+```
+
 ## Setup & Run Instructions
 
 ### Prerequisites
